@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kids Echo Shadowing — 초등 집중듣기 쉐도잉</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <div class="brand-area">
+      <span class="brand-icon">📚</span>
+      <div>
+        <div class="brand-title">Kids Echo Shadowing</div>
+        <div class="brand-sub">스마트 집중듣기 & 듀엣 쉐도잉</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="badge badge-points" id="pointsBadge">
+        ⭐ 누적 점수: <span id="totalPoints" style="margin-left: 4px;">0점</span>
+      </div>
+      <button class="btn-icon" id="adminBtn" title="교재 관리 및 설정">
+        ⚙️ <span>교재 관리</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Curriculum Info & Day Navigation -->
+    <div class="curriculum-bar">
+      <div class="chapter-info">
+        <h2 id="chapterTitle">Junie B. Jones and the Stupid Smelly Bus</h2>
+        <p id="chapterSub">Chapter 1: I Am Not a Baby — Day 1</p>
+      </div>
+      <div class="day-selector" id="daySelector">
+        <!-- Dynamically rendered day chips -->
+      </div>
+    </div>
+
+    <!-- Progress & Status -->
+    <div class="progress-container">
+      <div class="progress-header">
+        <span id="progressText">문장 1 / 7</span>
+        <span>오늘의 15분 미션</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Status Indicator Pill -->
+    <div class="status-pill status-idle" id="statusPill">
+      대기 중 ([START]를 누르세요)
+    </div>
+
+    <!-- Main Sentence Card -->
+    <div class="display-card" id="displayCard">
+      <div class="sentence-container" id="sentenceDisplay">
+        <!-- Dynamically rendered words -->
+      </div>
+    </div>
+
+    <!-- Minimal Controls -->
+    <div class="controls-bar">
+      <button class="btn-sub" id="replayBtn" disabled title="현재 문장 다시 듣기">
+        ↻ <span>다시 듣기</span>
+      </button>
+
+      <button class="btn-main" id="startBtn">
+        ▶ <span>START (오늘 15분 시작)</span>
+      </button>
+      
+      <button class="btn-main" id="pauseBtn" style="display: none; background: #ea580c;">
+        ⏸ <span>일시 정지</span>
+      </button>
+
+      <button class="btn-sub" id="nextBtn" disabled title="다음 문장으로 넘어가기">
+        ⏭ <span>다음 문장</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- Celebration Modal -->
+  <div class="modal-overlay" id="celebrationModal">
+    <div class="modal-content celebration-modal">
+      <div class="celebration-icon">🎉</div>
+      <div class="celebration-title">MISSION COMPLETE!</div>
+      <p style="font-size: 1.25rem; color: #64748b;">오늘의 집중듣기 쉐도잉 미션을 완벽하게 완수했습니다!</p>
+      
+      <div class="stars-rating">⭐⭐⭐⭐⭐</div>
+      <div class="celebration-score">
+        오늘 획득 점수: <span id="earnedPoints">+5점</span>
+      </div>
+
+      <p style="font-size: 1.1rem; margin-top: 0.5rem; color: #475569;">
+        총 누적 점수: <strong id="cumulativePoints" style="color: #2563eb;">5점</strong>
+      </p>
+
+      <button class="btn-main" id="closeCelebrationBtn" style="margin-top: 1.5rem;">
+        확인 (오늘 루틴 완료)
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin & Curriculum Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📖 교재 등록 및 챕터 관리</h3>
+        <button class="close-btn" id="closeAdminBtn">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label for="newBookTitle">책 제목</label>
+        <input type="text" id="newBookTitle" class="form-control" placeholder="예: Junie B. Jones #1">
+      </div>
+
+      <div class="form-group">
+        <label for="newChapterName">챕터명</label>
+        <input type="text" id="newChapterName" class="form-control" placeholder="예: Chapter 2: The Bus Ride">
+      </div>
+
+      <div class="form-group">
+        <label for="rawTextInput">
+          책 원문 텍스트 (사진 추출 텍스트 붙여넣기)
+        </label>
+        <textarea id="rawTextInput" class="form-control" placeholder="사진에서 추출된 텍스트를 여기에 붙여넣으면, 초1·2 호흡에 맞는 문장으로 자동 분할하여 6~10일 치 코스로 생성합니다."></textarea>
+      </div>
+
+      <button class="btn-main" id="processTextBtn" style="justify-content: center;">
+        ✨ 문장 자동 분할 및 새 챕터 생성
+      </button>
+
+      <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; font-size: 0.875rem; color: #64748b;">
+        💡 <strong>팁</strong>: 스마트폰으로 책 페이지 사진을 찍어 텍스트를 추출한 뒤 붙여넣으시면, 마침표 및 쉼표 기준으로 아이들이 쉐도잉하기 최적의 길이로 자동 편성됩니다.
+      </div>
+    </div>
+  </div>
+
+  <script src="js/audio-engine.js"></script>
+  <script src="js/curriculum.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
