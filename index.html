@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kids Echo Shadowing — 잠수네 연속 집중듣기 쉐도잉</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+  <div id="securityBanner" class="security-banner"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <div class="brand-area">
+      <span class="brand-icon">📚</span>
+      <div>
+        <div class="brand-title">Kids Echo Shadowing</div>
+        <div class="brand-sub">잠수네식 연속 집중듣기 & 듀엣 쉐도잉</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="badge badge-points" id="pointsBadge">
+        ⭐ <span id="totalPoints" style="margin-left: 4px;">0점</span>
+      </div>
+      <button class="btn-icon" id="adminBtn" title="설정 및 교재 관리">
+        ⚙️ <span>설정 & 교재</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Chapter Info & Timer -->
+    <div class="curriculum-bar">
+      <div class="chapter-info">
+        <div>
+          <h2 id="chapterTitle">Junie B. Jones and the Stupid Smelly Bus</h2>
+          <p id="chapterSub">Chapter 1: I Am Not a Baby — 연속 집중듣기</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress & Timer -->
+    <div class="progress-container">
+      <div class="progress-header">
+        <span id="progressText">책 전체 진행: 1 / 27 문장 (4% 완독)</span>
+        <span class="timer-badge" id="timerBadge">⏱️ 남은 시간: <strong>30:00</strong> / 30분</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Status Indicator Pill -->
+    <div class="status-pill status-idle" id="statusPill">
+      대기 중 ([START]를 누르세요)
+    </div>
+
+    <!-- Main Sentence Card with Emotion Badge -->
+    <div class="display-card" id="displayCard">
+      <div class="emotion-badge" id="emotionBadge">
+        👧 <strong>Junie B.</strong> &nbsp;|&nbsp; 👧 씩씩하고 밝게 자기소개!
+      </div>
+      <div class="sentence-container" id="sentenceDisplay">
+        <!-- Dynamically rendered words -->
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+      <button class="btn-sub" id="replayBtn" disabled title="현재 문장 다시 듣기">
+        ↻ <span>다시 듣기</span>
+      </button>
+
+      <button class="btn-main" id="startBtn">
+        ▶ <span>START (오늘 30분 시작)</span>
+      </button>
+      
+      <button class="btn-main" id="pauseBtn" style="display: none; background: #ea580c;">
+        ⏸ <span>일시 정지</span>
+      </button>
+
+      <button class="btn-sub" id="nextBtn" disabled title="다음 문장으로 넘어가기">
+        ⏭ <span>다음 문장</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- Celebration Modal -->
+  <div class="modal-overlay" id="celebrationModal">
+    <div class="modal-content celebration-modal">
+      <div class="celebration-icon">🎉</div>
+      <div class="celebration-title">오늘의 집중듣기 완주!</div>
+      <p id="celebrationSummaryText" style="font-size: 1.15rem; color: #1e293b; font-weight: 600; margin-top: 0.5rem;">
+        오늘 약속된 30분 동안 총 24개 문장을 완독했습니다!
+      </p>
+      <p id="parentPraiseText" style="font-size: 0.95rem; color: #64748b; margin-top: 0.25rem;">
+        두 아이가 감정을 실어 열정적으로 낭독을 완주했습니다!
+      </p>
+      
+      <div class="stars-rating" id="starsRating">⭐⭐⭐⭐⭐</div>
+      <div class="celebration-score">
+        오늘 획득 점수: <span id="earnedPoints">+5점</span>
+      </div>
+
+      <!-- Parent Score Adjuster -->
+      <div class="parent-rating-box">
+        <strong>부모님 칭찬 점수 확인:</strong>
+        <div class="parent-rating-buttons">
+          <button class="btn-star-score active" data-score="5">⭐⭐⭐⭐⭐ 5점 (열정 만점)</button>
+          <button class="btn-star-score" data-score="4">⭐⭐⭐⭐ 4점</button>
+          <button class="btn-star-score" data-score="3">⭐⭐⭐ 3점</button>
+        </div>
+      </div>
+
+      <p style="font-size: 0.9rem; margin-top: 0.25rem; color: #64748b;">
+        총 누적 점수: <strong id="cumulativePoints" style="color: #2563eb;">5점</strong>
+        <br><span style="font-size: 0.8rem; color: #94a3b8;">* 오늘 읽은 곳이 자동으로 저장되어 내일은 다음 문장부터 바로 이어집니다.</span>
+      </p>
+
+      <button class="btn-main" id="closeCelebrationBtn" style="margin-top: 1rem; width: 100%;">
+        확인 (오늘 루틴 완료 및 책갈피 저장)
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin & Settings Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚙️ 설정 및 교재 관리</h3>
+        <button class="close-btn" id="closeAdminBtn">&times;</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="voice">🔊 음성 연기 & 30분 설정</button>
+        <button class="admin-tab" data-tab="photo">📸 사진 책 업로드(AI)</button>
+        <button class="admin-tab" data-tab="text">📝 텍스트 직접 입력</button>
+        <button class="admin-tab" data-tab="apikey">🔑 API 키 설정</button>
+      </div>
+
+      <!-- Tab 1: Voice, Speed & Time Settings -->
+      <div class="tab-pane active" id="tab-voice">
+        <div class="form-group">
+          <label for="actingVoiceSelect">주인공 AI 성우 스타일 (OpenAI 연동 시)</label>
+          <select id="actingVoiceSelect" class="form-control">
+            <option value="nova" selected>🌟 Nova (밝고 발랄한 6세 여아 주인공 톤 - 주니비 추천)</option>
+            <option value="fable">🌟 Fable (표현력이 풍부한 구연동화 전문 성우 톤)</option>
+            <option value="alloy">🌟 Alloy (또박또박하고 맑은 중성 낭독 톤)</option>
+            <option value="shimmer">🌟 Shimmer (부드럽고 낭랑한 여성 성우 톤)</option>
+            <option value="echo">🌟 Echo (차분하고 신뢰감 있는 남성 낭독 톤)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="voiceSelect">브라우저 내장 음성 선택 (무료/로컬 재생)</label>
+          <select id="voiceSelect" class="form-control"></select>
+          <small style="color: #64748b; font-size: 0.8rem;">
+            * 🌟 표시된 Natural 또는 Google US English 음성을 선택하시면 가장 자연스럽습니다.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="ttsRateRange">낭독 속도 조절</label>
+            <span id="ttsRateVal" style="font-weight: 700; color: #2563eb;">0.85x</span>
+          </div>
+          <input type="range" id="ttsRateRange" min="0.65" max="1.15" step="0.05" value="0.85" class="form-control" style="cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8;">
+            <span>0.65x (느리게)</span>
+            <span>0.85x (초등 1·2 추천)</span>
+            <span>1.15x (빠르게)</span>
+          </div>
+        </div>
+
+        <button class="btn-sub" id="previewVoiceBtn" style="justify-content: center; width: 100%;">
+          🔊 선택한 목소리 및 속도 미리듣기
+        </button>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+
+        <div class="form-group">
+          <label for="sessionDurationSelect">하루 집중듣기 공부 시간 설정 (기본 30분)</label>
+          <select id="sessionDurationSelect" class="form-control">
+            <option value="10">10분</option>
+            <option value="15">15분</option>
+            <option value="20">20분</option>
+            <option value="25">25분</option>
+            <option value="30" selected>30분 (잠수네 집중듣기 기본 권장)</option>
+            <option value="35">35분</option>
+            <option value="40">40분</option>
+            <option value="45">45분</option>
+            <option value="50">50분</option>
+            <option value="60">60분 (1시간)</option>
+          </select>
+          <small style="color: #64748b; font-size: 0.8rem;">
+            * 설정한 시간이 지나면 오늘 분량이 자동 종료되고, 다음 날은 읽던 곳에서 바로 이어 읽습니다.
+          </small>
+        </div>
+      </div>
+
+      <!-- Tab 2: Photo Bulk Upload & Emotion OCR -->
+      <div class="tab-pane" id="tab-photo">
+        <div class="form-group">
+          <label for="photoBookTitle">책 제목</label>
+          <input type="text" id="photoBookTitle" class="form-control" placeholder="예: Junie B. Jones #1">
+        </div>
+
+        <div class="form-group">
+          <label for="photoChapterName">챕터명</label>
+          <input type="text" id="photoChapterName" class="form-control" placeholder="예: Chapter 1: I Am Not a Baby">
+        </div>
+
+        <div class="form-group">
+          <label>책 사진 다중 선택 (10~30장 전체)</label>
+          <input type="file" id="photoFileInput" multiple accept="image/*" style="display: none;">
+          <div class="file-drop-area" id="fileDropArea">
+            <div style="font-size: 2rem;">📷</div>
+            <strong id="selectedCountText">갤러리에서 사진을 여러 장 선택하거나 촬영하세요.</strong>
+            <span>(10장, 20장, 30장 한 번에 선택 가능)</span>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+        </div>
+
+        <button class="btn-main" id="aiProcessBtn" style="justify-content: center; width: 100%;">
+          ✨ AI로 감정선 분석 & 전체 문장 등록
+        </button>
+
+        <div id="aiStatusMsg" style="display: none; padding: 0.75rem; background: #eff6ff; color: #1d4ed8; border-radius: 8px; font-size: 0.9rem; text-align: center;"></div>
+      </div>
+
+      <!-- Tab 3: Manual Text Input -->
+      <div class="tab-pane" id="tab-text">
+        <div class="form-group">
+          <label for="newBookTitle">책 제목</label>
+          <input type="text" id="newBookTitle" class="form-control" placeholder="예: Junie B. Jones #1">
+        </div>
+
+        <div class="form-group">
+          <label for="newChapterName">챕터명</label>
+          <input type="text" id="newChapterName" class="form-control" placeholder="예: Chapter 1: I Am Not a Baby">
+        </div>
+
+        <div class="form-group">
+          <label for="rawTextInput">책 원문 전체 텍스트 붙여넣기</label>
+          <textarea id="rawTextInput" class="form-control" placeholder="책 전체 텍스트를 붙여넣으면 문장 1번부터 끝까지 순차 연속 읽기 코스로 등록합니다."></textarea>
+        </div>
+
+        <button class="btn-main" id="processTextBtn" style="justify-content: center; width: 100%;">
+          ✨ 책 전체 문장 등록
+        </button>
+      </div>
+
+      <!-- Tab 4: API Key Settings -->
+      <div class="tab-pane" id="tab-apikey">
+        <div class="form-group">
+          <label for="geminiApiKeyInput">Google Gemini API Key (사진 OCR & 감정분석용)</label>
+          <input type="password" id="geminiApiKeyInput" class="form-control" placeholder="AIzaSy...">
+          <small style="color: #64748b; font-size: 0.8rem;">
+            * <a href="https://aistudio.google.com/" target="_blank" style="color: #2563eb;">Google AI Studio</a>에서 무료 발급
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="openaiApiKeyInput">OpenAI API Key (선택: 고품질 성우 음성 생성용)</label>
+          <input type="password" id="openaiApiKeyInput" class="form-control" placeholder="sk-proj-...">
+          <small style="color: #64748b; font-size: 0.8rem;">
+            * OpenAI 키 입력 시 할리우드 성우 수준의 Nova/Fable 음성으로 자동 출력됩니다.
+          </small>
+        </div>
+
+        <button class="btn-main" id="saveApiKeyBtn" style="justify-content: center; width: 100%;">
+          💾 API 키 저장
+        </button>
+
+        <div id="apiSavedNotice" style="display: none; padding: 0.6rem; background: #dcfce7; color: #15803d; border-radius: 8px; font-size: 0.85rem; text-align: center;">
+          ✅ API 키가 안전하게 저장되었습니다!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/gemini-api.js"></script>
+  <script src="js/audio-engine.js"></script>
+  <script src="js/curriculum.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
