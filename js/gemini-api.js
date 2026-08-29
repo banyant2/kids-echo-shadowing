@@ -68,12 +68,13 @@ class GeminiApi {
         ctx.drawImage(img, 0, 0, width, height);
         
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        // 쉼표 뒤의 순수 Base64 문자열만 정확히 추출 ( 인덱스 지정)
-        const base64 = dataUrl.split(',');
+        // 안전한 순수 Base64 문자열 추출 (배열 오류 원천 차단)
+        const commaIdx = dataUrl.indexOf(',');
+        const base64Str = commaIdx !== -1 ? dataUrl.substring(commaIdx + 1) : dataUrl;
         
         resolve({
           mimeType: 'image/jpeg',
-          data: base64
+          data: base64Str
         });
       };
       img.onerror = () => {
@@ -118,9 +119,9 @@ class GeminiApi {
       if (onProgress) onProgress(`사진 최적화 압축 중 (${i + 1}/${imageFiles.length})...`);
       const compressed = await this.compressImage(imageFiles[i]);
       imageParts.push({
-        inlineData: {
-          mimeType: compressed.mimeType,
-          data: compressed.data
+        inline_data: {
+          mime_type: "image/jpeg",
+          data: String(compressed.data)
         }
       });
     }
