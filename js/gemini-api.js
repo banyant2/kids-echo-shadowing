@@ -71,9 +71,6 @@ class GeminiApi {
     return this.getActingVoice();
   }
 
-  /**
-   * API 키에서 지원하는 모델을 실시간으로 자동 조회
-   */
   async getAvailableModel(apiKey) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -90,7 +87,7 @@ class GeminiApi {
         }
       }
     } catch (e) {
-      console.warn("ListModels 조회 실패:", e);
+      console.warn("ListModels discovery failed:", e);
     }
     return null;
   }
@@ -184,7 +181,11 @@ Return ONLY a valid JSON object matching this schema:
 
     for (let i = 0; i < candidateEndpoints.length; i++) {
       const endpoint = candidateEndpoints[i];
-      const modelCleanName = endpoint.split('/models/') ? endpoint.split('/models/').split(':')[0] : 'gemini';
+      let modelCleanName = 'gemini';
+      if (endpoint.includes('/models/')) {
+        const parts = endpoint.split('/models/');
+        modelCleanName = parts.split(':')[0];
+      }
 
       if (onProgress) onProgress(`Gemini AI (${modelCleanName}) 분석 중...`);
 
