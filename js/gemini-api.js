@@ -1,5 +1,5 @@
 /**
- * GeminiApi & Multi-Speaker Voice Synthesizer with Multi-Model Fallback.
+ * GeminiApi & Multi-Speaker Voice Synthesizer with CamelCase inlineData.
  */
 class GeminiApi {
   constructor() {
@@ -44,7 +44,8 @@ class GeminiApi {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64String = reader.result.split(',');
+        const result = reader.result;
+        const base64String = result.includes(',') ? result.split(',') : result;
         resolve({
           mimeType: file.type || 'image/jpeg',
           data: base64String
@@ -87,8 +88,8 @@ class GeminiApi {
     for (let i = 0; i < imageFiles.length; i++) {
       const b64 = await this.fileToBase64(imageFiles[i]);
       imageParts.push({
-        inline_data: {
-          mime_type: b64.mimeType,
+        inlineData: {
+          mimeType: b64.mimeType,
           data: b64.data
         }
       });
