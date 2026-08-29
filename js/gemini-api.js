@@ -184,7 +184,9 @@ Return ONLY a valid JSON object matching this schema:
       let modelCleanName = 'gemini';
       if (endpoint.includes('/models/')) {
         const parts = endpoint.split('/models/');
-        modelCleanName = parts.split(':')[0];
+        if (parts) {
+          modelCleanName = parts.split(':')[0];
+        }
       }
 
       if (onProgress) onProgress(`Gemini AI (${modelCleanName}) 분석 중...`);
@@ -252,4 +254,6 @@ Return ONLY a valid JSON object matching this schema:
   }
 }
 
-window.GeminiApi = GeminiApi;
+if (typeof window !== 'undefined') {
+  window.GeminiApi = GeminiApi;
+}
