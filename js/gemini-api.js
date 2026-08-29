@@ -1,5 +1,5 @@
 /**
- * GeminiApi & Multi-Speaker Voice Synthesizer with Multi-Model Fallback.
+ * GeminiApi & Multi-Speaker Voice Synthesizer with Dynamic Model Discovery.
  */
 class GeminiApi {
   constructor() {
@@ -44,7 +44,7 @@ class GeminiApi {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64String = reader.result.split(',')[1];
+        const base64String = reader.result.split(',');
         resolve({
           mimeType: file.type || 'image/jpeg',
           data: base64String
@@ -72,8 +72,29 @@ class GeminiApi {
   }
 
   /**
-   * Extract story with automatic model fallbacks (prevents 404 model not found)
+   * API 키에서 지원하는 모델을 실시간으로 자동 조회
    */
+  async getAvailableModel(apiKey) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.models && data.models.length > 0) {
+          const preferred = data.models.find(m => 
+            (m.name.includes('flash') || m.name.includes('pro')) && 
+            m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
+          );
+          if (preferred) return preferred.name;
+          const fallback = data.models.find(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'));
+          if (fallback) return fallback.name;
+        }
+      }
+    } catch (e) {
+      console.warn("ListModels 조회 실패:", e);
+    }
+    return null;
+  }
+
   async extractStoryWithEmotions(imageFiles, bookTitle, chapterName, onProgress = null) {
     const apiKey = this.getGeminiApiKey();
     if (!apiKey) {
@@ -142,24 +163,30 @@ Return ONLY a valid JSON object matching this schema:
       }
     };
 
-    // Candidate Endpoints for auto-fallback
-    const candidateEndpoints = [
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+    if (onProgress) onProgress("Gemini API 모델 자동 감지 중...");
+    const discoveredModelName = await this.getAvailableModel(apiKey);
+
+    const candidateEndpoints = [];
+    if (discoveredModelName) {
+      candidateEndpoints.push(`https://generativelanguage.googleapis.com/v1beta/${discoveredModelName}:generateContent?key=${apiKey}`);
+    }
+
+    candidateEndpoints.push(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
-    ];
+    );
 
     let lastError = null;
     let resJson = null;
 
     for (let i = 0; i < candidateEndpoints.length; i++) {
       const endpoint = candidateEndpoints[i];
-      const modelName = endpoint.split('/models/')[1].split(':')[0];
+      const modelCleanName = endpoint.split('/models/') ? endpoint.split('/models/').split(':')[0] : 'gemini';
 
-      if (onProgress) onProgress(`Gemini AI (${modelName}) 분석 중...`);
+      if (onProgress) onProgress(`Gemini AI (${modelCleanName}) 분석 중...`);
 
       try {
         const response = await fetch(endpoint, {
@@ -170,20 +197,19 @@ Return ONLY a valid JSON object matching this schema:
 
         if (response.ok) {
           resJson = await response.json();
-          break; // Success!
+          break;
         } else {
           const errText = await response.text();
-          console.warn(`Endpoint ${modelName} failed (${response.status}):`, errText);
+          console.warn(`Endpoint ${modelCleanName} failed:`, errText);
           lastError = new Error(`Gemini API 오류 (${response.status}): ${errText}`);
         }
       } catch (networkErr) {
-        console.warn(`Network attempt to ${modelName} failed:`, networkErr);
         lastError = networkErr;
       }
     }
 
     if (!resJson) {
-      throw lastError || new Error("Gemini API 호출에 실패했습니다. API 키를 확인해주세요.");
+      throw lastError || new Error("Gemini API 호출에 실패했습니다. aistudio.google.com에서 발급받은 API 키인지 확인해주세요.");
     }
 
     const rawContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -197,12 +223,9 @@ Return ONLY a valid JSON object matching this schema:
 
   async generateCharacterAudio(text, speaker = 'Junie B.', speed = 0.88) {
     const openAIKey = this.getOpenAIApiKey();
-    if (!openAIKey) {
-      return null;
-    }
+    if (!openAIKey) return null;
 
     const voice = this.getVoiceForSpeaker(speaker);
-
     try {
       const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
@@ -223,7 +246,6 @@ Return ONLY a valid JSON object matching this schema:
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch (e) {
-      console.warn("Character audio generation failed:", e);
       return null;
     }
   }
