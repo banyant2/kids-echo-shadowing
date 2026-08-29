@@ -1,75 +1,181 @@
 /**
- * CurriculumManager - Manages daily lessons, sentence splitting, points, and curriculum storage.
+ * CurriculumManager - Continuous Sequential Reading with Emotion/Acting Metadata.
  */
 class CurriculumManager {
   constructor() {
-    this.STORAGE_KEY_CHAPTERS = 'shadowing_chapters_v1';
-    this.STORAGE_KEY_PROGRESS = 'shadowing_progress_v1';
-    this.STORAGE_KEY_RECORDS = 'shadowing_records_v1';
+    this.STORAGE_KEY_CHAPTERS = 'shadowing_emotion_chapters_v3';
+    this.STORAGE_KEY_PROGRESS = 'shadowing_emotion_progress_v3';
+    this.STORAGE_KEY_SETTINGS = 'shadowing_emotion_settings_v3';
 
+    // Rich emotion-tagged Chapter 1 of Junie B. Jones
     this.defaultCurriculum = {
       id: 'junie_b_ch1',
       title: 'Junie B. Jones and the Stupid Smelly Bus',
       chapter: 'Chapter 1: I Am Not a Baby',
-      days: {
-        1: {
-          theme: 'Day 1: 캐릭터 소개 및 감정 표현',
-          sentences: [
-            "My name is Junie B. Jones.",
-            "The B stands for Beatrice.",
-            "Except I do not like Beatrice.",
-            "I just like B and that's all.",
-            "I am in kindergarten this year.",
-            "My teacher is named Mrs. She has another name, too.",
-            "Except I only like Mrs. and that's all."
-          ]
+      sentences: [
+        {
+          text: "My name is Junie B. Jones.",
+          speaker: "Junie B.",
+          emotionEmoji: "👧",
+          emotionLabel: "👧 씩씩하고 밝게 자기소개!"
         },
-        2: {
-          theme: 'Day 2: 스쿨버스 이야기 시작',
-          sentences: [
-            "Today was the first day of school.",
-            "I do not want to ride the school bus.",
-            "Because the big kids make fun of me.",
-            "And they squish people into the seats.",
-            "Also, it is too loud and smelly.",
-            "My mother said I have to be brave.",
-            "But I don't want to be brave at all."
-          ]
+        {
+          text: "The B stands for Beatrice.",
+          speaker: "Junie B.",
+          emotionEmoji: "🤫",
+          emotionLabel: "🤫 살짝 비밀을 알려주듯"
         },
-        3: {
-          theme: 'Day 3: 친구와의 대화 & 교실 상황',
-          sentences: [
-            "I saw my best friend Lucille on the playground.",
-            "Lucille had on a beautiful fluffy dress.",
-            "She said her grandmother bought it for her.",
-            "I told her my shoes were brand new, too.",
-            "Then we ran together to the classroom door.",
-            "Our classroom has shiny tables and little chairs."
-          ]
+        {
+          text: "Except I do not like Beatrice.",
+          speaker: "Junie B.",
+          emotionEmoji: "😤",
+          emotionLabel: "😤 고개를 저으며 단호하게!"
         },
-        4: {
-          theme: 'Day 4: 스쿨버스 탑승의 위기',
-          sentences: [
-            "At three o'clock, the loud bell rang.",
-            "Mrs. told everybody to get in line.",
-            "My heart started beating very fast.",
-            "The big yellow bus was waiting outside.",
-            "I walked very slowly down the sidewalk.",
-            "I tried to hide behind a tall bush."
-          ]
+        {
+          text: "I just like B and that's all.",
+          speaker: "Junie B.",
+          emotionEmoji: "😆",
+          emotionLabel: "😆 딱 잘라 말하며 찡긋!"
         },
-        5: {
-          theme: 'Day 5: 챕터 1 핵심 표현 총정리 복습',
-          sentences: [
-            "My name is Junie B. Jones.",
-            "I just like B and that's all.",
-            "I do not want to ride the school bus.",
-            "Because the big kids make fun of me.",
-            "Mrs. said everybody has to listen carefully.",
-            "Tomorrow is going to be a brand new day!"
-          ]
+        {
+          text: "I am in kindergarten this year.",
+          speaker: "Junie B.",
+          emotionEmoji: "🎒",
+          emotionLabel: "🎒 자랑스럽고 의기양양하게!"
+        },
+        {
+          text: "My teacher is named Mrs. She has another name, too.",
+          speaker: "Junie B.",
+          emotionEmoji: "👩‍🏫",
+          emotionLabel: "👩‍🏫 생각에 잠기며 또박또박"
+        },
+        {
+          text: "Except I only like Mrs. and that's all.",
+          speaker: "Junie B.",
+          emotionEmoji: "😤",
+          emotionLabel: "😤 고집부리듯 당차게!"
+        },
+        {
+          text: "Today was the first day of school.",
+          speaker: "Junie B.",
+          emotionEmoji: "📅",
+          emotionLabel: "📅 오늘의 중요한 사건 이야기하듯"
+        },
+        {
+          text: "I do not want to ride the school bus.",
+          speaker: "Junie B.",
+          emotionEmoji: "😡",
+          emotionLabel: "😡 입을 삐죽이며 강하게 거부!"
+        },
+        {
+          text: "Because the big kids make fun of me.",
+          speaker: "Junie B.",
+          emotionEmoji: "🥺",
+          emotionLabel: "🥺 억울하고 속상한 마음으로"
+        },
+        {
+          text: "And they squish people into the seats.",
+          speaker: "Junie B.",
+          emotionEmoji: "😣",
+          emotionLabel: "😣 으악! 찡그리며 불평하듯"
+        },
+        {
+          text: "Also, it is too loud and smelly.",
+          speaker: "Junie B.",
+          emotionEmoji: "👃",
+          emotionLabel: "👃 코를 쥐어막으며 질색하듯!"
+        },
+        {
+          text: "My mother said I have to be brave.",
+          speaker: "Junie B.",
+          emotionEmoji: "👩",
+          emotionLabel: "👩 엄마 흉내 내며 얌전하게"
+        },
+        {
+          text: "But I don't want to be brave at all.",
+          speaker: "Junie B.",
+          emotionEmoji: "😤",
+          emotionLabel: "😤 발을 동동 구르며 투정 부리듯!"
+        },
+        {
+          text: "I saw my best friend Lucille on the playground.",
+          speaker: "Junie B.",
+          emotionEmoji: "👭",
+          emotionLabel: "👭 친구를 발견하고 반갑게!"
+        },
+        {
+          text: "Lucille had on a beautiful fluffy dress.",
+          speaker: "Junie B.",
+          emotionEmoji: "👗",
+          emotionLabel: "👗 눈을 크게 뜨며 감탄하듯"
+        },
+        {
+          text: "She said her grandmother bought it for her.",
+          speaker: "Lucille",
+          emotionEmoji: "💅",
+          emotionLabel: "💅 새침하고 도도한 공주님처럼"
+        },
+        {
+          text: "I told her my shoes were brand new, too.",
+          speaker: "Junie B.",
+          emotionEmoji: "👟",
+          emotionLabel: "👟 질 수 없다는 듯 자랑하며!"
+        },
+        {
+          text: "Then we ran together to the classroom door.",
+          speaker: "Junie B.",
+          emotionEmoji: "🏃‍♀️",
+          emotionLabel: "🏃‍♀️ 우다다 뛰어가듯 신나게!"
+        },
+        {
+          text: "Our classroom has shiny tables and little chairs.",
+          speaker: "Junie B.",
+          emotionEmoji: "✨",
+          emotionLabel: "✨ 신기한 교실을 둘러보며"
+        },
+        {
+          text: "At three o'clock, the loud bell rang.",
+          speaker: "Junie B.",
+          emotionEmoji: "🔔",
+          emotionLabel: "🔔 땡땡땡! 소리에 깜짝 놀라며"
+        },
+        {
+          text: "Mrs. told everybody to get in line for the bus.",
+          speaker: "Junie B.",
+          emotionEmoji: "😱",
+          emotionLabel: "😱 올 것이 왔다는 듯 긴장하며"
+        },
+        {
+          text: "My heart started beating very fast.",
+          speaker: "Junie B.",
+          emotionEmoji: "💓",
+          emotionLabel: "💓 쿵쾅쿵쾅 가슴을 짚으며 조마조마하게..."
+        },
+        {
+          text: "The big yellow bus was waiting outside the door.",
+          speaker: "Junie B.",
+          emotionEmoji: "🚌",
+          emotionLabel: "🚌 거대한 괴물을 보듯 떨리는 목소리로"
+        },
+        {
+          text: "I walked very slowly down the sidewalk.",
+          speaker: "Junie B.",
+          emotionEmoji: "🐢",
+          emotionLabel: "🐢 거북이처럼 발을 질질 끌며"
+        },
+        {
+          text: "I tried to hide behind a tall green bush.",
+          speaker: "Junie B.",
+          emotionEmoji: "🤫",
+          emotionLabel: "🤫 숨죽여 쉿! 속삭이듯이"
+        },
+        {
+          text: "Because I am not going to ride that smelly bus today!",
+          speaker: "Junie B.",
+          emotionEmoji: "😤",
+          emotionLabel: "😤 결심한 듯 굳건하고 당차게 외치기!"
         }
-      }
+      ]
     };
 
     this.initStorage();
@@ -83,12 +189,35 @@ class CurriculumManager {
     if (!localStorage.getItem(this.STORAGE_KEY_PROGRESS)) {
       this.saveProgress({
         currentChapterId: 'junie_b_ch1',
-        currentDay: 1,
+        currentSentenceIndex: 0,
         totalPoints: 0,
-        completedDays: {},
-        lastCompletedDate: null
+        completedSessions: []
       });
     }
+
+    if (!localStorage.getItem(this.STORAGE_KEY_SETTINGS)) {
+      this.saveSettings({
+        sessionDurationMinutes: 30
+      });
+    }
+  }
+
+  getSettings() {
+    try {
+      return JSON.parse(localStorage.getItem(this.STORAGE_KEY_SETTINGS)) || { sessionDurationMinutes: 30 };
+    } catch (e) {
+      return { sessionDurationMinutes: 30 };
+    }
+  }
+
+  saveSettings(settings) {
+    localStorage.setItem(this.STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+  }
+
+  setSessionDuration(minutes) {
+    const s = this.getSettings();
+    s.sessionDurationMinutes = parseInt(minutes, 10);
+    this.saveSettings(s);
   }
 
   getChapters() {
@@ -107,13 +236,12 @@ class CurriculumManager {
     try {
       return JSON.parse(localStorage.getItem(this.STORAGE_KEY_PROGRESS)) || {
         currentChapterId: 'junie_b_ch1',
-        currentDay: 1,
+        currentSentenceIndex: 0,
         totalPoints: 0,
-        completedDays: {},
-        lastCompletedDate: null
+        completedSessions: []
       };
     } catch (e) {
-      return { currentChapterId: 'junie_b_ch1', currentDay: 1, totalPoints: 0 };
+      return { currentChapterId: 'junie_b_ch1', currentSentenceIndex: 0, totalPoints: 0, completedSessions: [] };
     }
   }
 
@@ -127,125 +255,74 @@ class CurriculumManager {
     return chapters.find(c => c.id === progress.currentChapterId) || chapters[0] || this.defaultCurriculum;
   }
 
-  getCurrentDaySentences() {
+  getAllSentences() {
     const chapter = this.getCurrentChapter();
-    const progress = this.getProgress();
-    const dayData = chapter.days[progress.currentDay];
-    if (dayData && dayData.sentences) {
-      return dayData.sentences;
-    }
-    // Fallback to day 1
-    return (chapter.days[1] && chapter.days[1].sentences) || [];
+    return chapter.sentences || [];
   }
 
-  setDay(dayNum) {
+  getCurrentSentenceItem(index) {
+    const sentences = this.getAllSentences();
+    const item = sentences[index];
+    if (!item) return null;
+    if (typeof item === 'string') {
+      return {
+        text: item,
+        speaker: 'Narrator',
+        emotionEmoji: '📖',
+        emotionLabel: '📖 또박또박 낭독하기'
+      };
+    }
+    return item;
+  }
+
+  getBookmarkIndex() {
     const progress = this.getProgress();
-    progress.currentDay = parseInt(dayNum, 10);
+    return progress.currentSentenceIndex || 0;
+  }
+
+  saveBookmarkIndex(index) {
+    const progress = this.getProgress();
+    progress.currentSentenceIndex = index;
     this.saveProgress(progress);
   }
 
-  awardMissionPoints() {
+  recordSessionCompletion(earnedPoints, readCount, durationMinutes) {
     const progress = this.getProgress();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const key = `${progress.currentChapterId}_day${progress.currentDay}_${todayStr}`;
+    const todayStr = new Date().toISOString();
 
-    progress.totalPoints = (progress.totalPoints || 0) + 5;
-    progress.completedDays = progress.completedDays || {};
-    progress.completedDays[key] = {
+    progress.totalPoints = (progress.totalPoints || 0) + earnedPoints;
+    progress.completedSessions = progress.completedSessions || [];
+    progress.completedSessions.push({
       date: todayStr,
-      points: 5,
-      chapter: progress.currentChapterId,
-      day: progress.currentDay
-    };
-    progress.lastCompletedDate = todayStr;
-
-    // Auto advance to next day if available
-    const chapter = this.getCurrentChapter();
-    const maxDay = Math.max(...Object.keys(chapter.days).map(Number));
-    if (progress.currentDay < maxDay) {
-      progress.currentDay += 1;
-    }
+      points: earnedPoints,
+      readCount: readCount,
+      durationMinutes: durationMinutes,
+      chapterId: progress.currentChapterId
+    });
 
     this.saveProgress(progress);
     return progress.totalPoints;
   }
 
-  /**
-   * Split raw OCR / Photo text into optimal elementary school sentences
-   */
-  splitRawTextIntoSentences(rawText) {
-    if (!rawText) return [];
-
-    // Normalize whitespace
-    let text = rawText.replace(/\r\n/g, '\n').replace(/\t/g, ' ').replace(/ +/g, ' ');
-
-    // Match sentences ending in punctuation
-    const rawMatches = text.match(/[^.!?\n]+[.!?]+["']?|[^.!?\n]+$/g) || [];
-    const result = [];
-
-    rawMatches.forEach(chunk => {
-      let trimmed = chunk.trim();
-      if (trimmed.length < 3) return;
-
-      // Clean leading page numbers or garbage
-      trimmed = trimmed.replace(/^[\d\s\-_.,]+/, '').trim();
-      if (!trimmed) return;
-
-      // If sentence is too long (> 16 words), try splitting at commas or conjunctions for young kids
-      const words = trimmed.split(' ');
-      if (words.length > 16) {
-        const commaIndex = trimmed.indexOf(', ');
-        if (commaIndex > 15 && commaIndex < trimmed.length - 15) {
-          result.push(trimmed.slice(0, commaIndex + 1).trim());
-          result.push(trimmed.slice(commaIndex + 2).trim());
-          return;
-        }
-      }
-
-      result.push(trimmed);
-    });
-
-    return result;
-  }
-
-  /**
-   * Automatically organize a list of sentences into 5-10 day sets
-   */
-  createChapterFromSentences(title, chapterName, sentences, daysCount = 6) {
-    const total = sentences.length;
-    const perDay = Math.max(6, Math.ceil(total / daysCount));
-    const days = {};
-
-    for (let d = 1; d <= daysCount; d++) {
-      const start = (d - 1) * perDay;
-      const end = Math.min(start + perDay, total);
-      let daySentences = sentences.slice(start, end);
-
-      if (daySentences.length === 0 && d > 1) {
-        // Add review sentences for later days
-        daySentences = sentences.slice(0, Math.min(8, total));
-      }
-
-      days[d] = {
-        theme: `Day ${d}: 핵심 문장 학습`,
-        sentences: daySentences
-      };
+  addContinuousChapter(title, chapterName, sentences) {
+    if (!sentences || sentences.length === 0) {
+      throw new Error("추출된 문장이 없습니다.");
     }
 
     const newChapter = {
-      id: 'custom_' + Date.now(),
-      title: title || '새로운 영어 동화',
+      id: 'chapter_' + Date.now(),
+      title: title || '새로운 책',
       chapter: chapterName || 'Chapter 1',
-      days: days
+      sentences: sentences
     };
 
     const chapters = this.getChapters();
-    chapters.unshift(newChapter); // Make it the first/active one
+    chapters.unshift(newChapter);
     this.saveChapters(chapters);
 
     const progress = this.getProgress();
     progress.currentChapterId = newChapter.id;
-    progress.currentDay = 1;
+    progress.currentSentenceIndex = 0;
     this.saveProgress(progress);
 
     return newChapter;
