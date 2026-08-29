@@ -1,5 +1,5 @@
 /**
- * GeminiApi & Multi-Speaker Voice Synthesizer with Dynamic Model Discovery.
+ * GeminiApi & Multi-Speaker Voice Synthesizer with Multi-Model Fallback.
  */
 class GeminiApi {
   constructor() {
@@ -71,27 +71,6 @@ class GeminiApi {
     return this.getActingVoice();
   }
 
-  async getAvailableModel(apiKey) {
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.models && data.models.length > 0) {
-          const preferred = data.models.find(m => 
-            (m.name.includes('flash') || m.name.includes('pro')) && 
-            m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
-          );
-          if (preferred) return preferred.name;
-          const fallback = data.models.find(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'));
-          if (fallback) return fallback.name;
-        }
-      }
-    } catch (e) {
-      console.warn("ListModels discovery failed:", e);
-    }
-    return null;
-  }
-
   async extractStoryWithEmotions(imageFiles, bookTitle, chapterName, onProgress = null) {
     const apiKey = this.getGeminiApiKey();
     if (!apiKey) {
@@ -160,36 +139,21 @@ Return ONLY a valid JSON object matching this schema:
       }
     };
 
-    if (onProgress) onProgress("Gemini API 모델 자동 감지 중...");
-    const discoveredModelName = await this.getAvailableModel(apiKey);
-
-    const candidateEndpoints = [];
-    if (discoveredModelName) {
-      candidateEndpoints.push(`https://generativelanguage.googleapis.com/v1beta/${discoveredModelName}:generateContent?key=${apiKey}`);
-    }
-
-    candidateEndpoints.push(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
-    );
+    const candidateModels = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ];
 
     let lastError = null;
     let resJson = null;
 
-    for (let i = 0; i < candidateEndpoints.length; i++) {
-      const endpoint = candidateEndpoints[i];
-      let modelCleanName = 'gemini';
-      if (endpoint.includes('/models/')) {
-        const parts = endpoint.split('/models/');
-        if (parts) {
-          modelCleanName = parts.split(':')[0];
-        }
-      }
+    for (const modelName of candidateModels) {
+      if (onProgress) onProgress(`Gemini AI (${modelName}) 분석 중...`);
 
-      if (onProgress) onProgress(`Gemini AI (${modelCleanName}) 분석 중...`);
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
       try {
         const response = await fetch(endpoint, {
@@ -203,7 +167,7 @@ Return ONLY a valid JSON object matching this schema:
           break;
         } else {
           const errText = await response.text();
-          console.warn(`Endpoint ${modelCleanName} failed:`, errText);
+          console.warn(`Endpoint ${modelName} failed (${response.status}):`, errText);
           lastError = new Error(`Gemini API 오류 (${response.status}): ${errText}`);
         }
       } catch (networkErr) {
