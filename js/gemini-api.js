@@ -1,6 +1,5 @@
 /**
- * GeminiApi - Dedicated to the Single Most Cost-Effective & Fastest Model (Gemini 2.0 Flash).
- * Zero redundant model cycling, 100% free-tier eligible.
+ * GeminiApi - Updated for Google's Latest Gemini Flash Model (gemini-3.6-flash).
  */
 class GeminiApi {
   constructor() {
@@ -46,9 +45,8 @@ class GeminiApi {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
-        // Extract exact base64 data string after the comma
         const base64String = (typeof result === 'string' && result.indexOf(',') !== -1)
-          ? result.split(',')[1]
+          ? result.split(',')
           : result;
         resolve({
           mimeType: file.type || 'image/jpeg',
@@ -76,9 +74,6 @@ class GeminiApi {
     return this.getActingVoice();
   }
 
-  /**
-   * Single Dedicated Call to the Fastest & Cheapest Model (Gemini 2.0 Flash)
-   */
   async extractStoryWithEmotions(imageFiles, bookTitle, chapterName, onProgress = null) {
     const apiKey = this.getGeminiApiKey();
     if (!apiKey) {
@@ -147,29 +142,46 @@ Return ONLY a valid JSON object matching this schema:
       }
     };
 
-    if (onProgress) onProgress("Gemini 2.0 Flash로 책 분석 중...");
+    // Candidate list starting with gemini-3.6-flash
+    const candidateModels = [
+      'gemini-3.6-flash',
+      'gemini-2.5-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash'
+    ];
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    let lastError = null;
+    let resJson = null;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
+    for (const modelName of candidateModels) {
+      if (onProgress) onProgress(`Gemini AI (${modelName}) 분석 중...`);
 
-    if (!response.ok) {
-      const errText = await response.text();
-      let errorMsg = `Gemini API 오류 (${response.status})`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
       try {
-        const parsed = JSON.parse(errText);
-        if (parsed.error && parsed.error.message) {
-          errorMsg += `: ${parsed.error.message}`;
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (response.ok) {
+          resJson = await response.json();
+          break; // Success!
+        } else {
+          const errText = await response.text();
+          console.warn(`Endpoint ${modelName} returned ${response.status}:`, errText);
+          lastError = new Error(`Gemini API 오류 (${response.status}): ${errText}`);
         }
-      } catch (e) {}
-      throw new Error(errorMsg);
+      } catch (networkErr) {
+        lastError = networkErr;
+      }
     }
 
-    const resJson = await response.json();
+    if (!resJson) {
+      throw lastError || new Error("Gemini API 호출에 실패했습니다. aistudio.google.com에서 발급받은 API 키인지 확인해주세요.");
+    }
+
     const rawContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawContent) {
       throw new Error("Gemini AI로부터 올바른 응답을 받지 못했습니다.");
