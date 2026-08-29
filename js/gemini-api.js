@@ -66,8 +66,11 @@ class GeminiApi {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
+        
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        // 쉼표 뒤의 순수 Base64 문자열만 정확히 추출 ( 인덱스 지정)
         const base64 = dataUrl.split(',');
+        
         resolve({
           mimeType: 'image/jpeg',
           data: base64
@@ -168,8 +171,8 @@ Return ONLY a valid JSON object matching this schema:
     };
 
     const candidateModels = [
+      'gemini-3.6-flash',
       'gemini-2.5-flash',
-      'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
       'gemini-1.5-flash'
     ];
