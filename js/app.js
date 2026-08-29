@@ -1,5 +1,5 @@
 /**
- * Main Application Coordinator - Emotion-Acting Continuous Reading, Timer & UI Sync.
+ * Main Application Coordinator - Slower Paced Shadowing, 2X Recording Window, Continuous Timer & UI Sync.
  */
 document.addEventListener('DOMContentLoaded', () => {
   const audio = new AudioEngine();
@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ttsRateVal = document.getElementById('ttsRateVal');
   const previewVoiceBtn = document.getElementById('previewVoiceBtn');
   const sessionDurationSelect = document.getElementById('sessionDurationSelect');
+  const speedPresetBtns = document.querySelectorAll('.btn-speed-preset');
 
   // Photo Upload Tab
   const photoFileInput = document.getElementById('photoFileInput');
@@ -159,15 +160,35 @@ document.addEventListener('DOMContentLoaded', () => {
     voiceSelect.addEventListener('click', populateVoices);
   }
 
-  if (ttsRateRange && ttsRateVal) {
-    ttsRateRange.value = audio.ttsRate;
-    ttsRateVal.innerText = `${audio.ttsRate}x`;
-
-    ttsRateRange.addEventListener('input', () => {
-      ttsRateVal.innerText = `${ttsRateRange.value}x`;
-      audio.setRate(ttsRateRange.value);
+  // Speed Slider & Presets
+  function updateSpeedUI(rateVal) {
+    const rate = parseFloat(rateVal);
+    audio.setRate(rate);
+    if (ttsRateRange) ttsRateRange.value = rate.toFixed(2);
+    if (ttsRateVal) ttsRateVal.innerText = `${rate.toFixed(2)}x`;
+    speedPresetBtns.forEach(b => {
+      if (Math.abs(parseFloat(b.dataset.speed) - rate) < 0.03) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
     });
   }
+
+  if (ttsRateRange && ttsRateVal) {
+    ttsRateRange.value = audio.ttsRate;
+    ttsRateVal.innerText = `${audio.ttsRate.toFixed(2)}x`;
+
+    ttsRateRange.addEventListener('input', () => {
+      updateSpeedUI(ttsRateRange.value);
+    });
+  }
+
+  speedPresetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      updateSpeedUI(btn.dataset.speed);
+    });
+  });
 
   if (previewVoiceBtn) {
     previewVoiceBtn.addEventListener('click', () => {
@@ -188,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Load voices dynamically
   if ('speechSynthesis' in window) {
     speechSynthesis.onvoiceschanged = () => {
       audio.initVoices();
@@ -275,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Render Emotion Badge
     if (emotionBadge) {
       emotionBadge.style.display = 'inline-flex';
       emotionBadge.innerHTML = `${item.emotionEmoji || '👧'} <strong>${item.speaker || 'Narrator'}</strong> &nbsp;|&nbsp; ${item.emotionLabel || '또박또박 낭독하기'}`;
@@ -332,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentState = STATE.IDLE;
   }
 
-  // State Machine Loop
+  // State Machine Loop with 2X Slower Shadowing Trailing Window
   async function runCycle() {
     const sentences = curriculum.getAllSentences();
     if (!sentences || sentences.length === 0) return;
@@ -354,29 +373,37 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCurrentSentence();
 
     try {
-      // 1. Play Native Acting & Record
+      // 1. Play Native & Record
       currentState = STATE.PLAY_AND_RECORD;
-      setStatus(`🔊 1. 감정 연기 듣기 & 따라 읽기 (#${currentSentenceIndex + 1})`, 'status-native');
+      setStatus(`🔊 1. 원음 듣기 & 따라 읽기 (#${currentSentenceIndex + 1})`, 'status-native');
       displayCard.classList.add('active-reading');
       audio.playChime();
       
+      const playbackStart = performance.now();
       audio.startRecording();
 
+      let playbackResult = { durationMs: 3000 };
       if (item.audioUrl) {
-        await audio.playAudioUrl(item.audioUrl);
+        playbackResult = await audio.playAudioUrl(item.audioUrl);
       } else {
-        await audio.speakTTS(item.text, (charIdx, len) => {
+        playbackResult = await audio.speakTTS(item.text, (charIdx, len) => {
           highlightWord(charIdx, len);
         });
       }
 
       if (isPaused) return;
 
-      // 2. Buffer for child voice trailing
+      // 2. Generous 2X Recording Window for Children (원음 재생 시간만큼을 추가로 더 대기)
       currentState = STATE.BUFFER;
       clearHighlight();
-      setStatus('🎤 쉐도잉 마무리 중 (+1.8초)...', 'status-buffer');
-      await new Promise(r => setTimeout(r, 1800));
+      
+      const measuredPlaybackMs = (playbackResult && playbackResult.durationMs) ? playbackResult.durationMs : (performance.now() - playbackStart);
+      // Trailing buffer is equal to the playback duration (min 3.5 seconds)
+      const trailingBufferMs = Math.max(3500, Math.round(measuredPlaybackMs * 1.1));
+      const trailingSecs = (trailingBufferMs / 1000).toFixed(1);
+
+      setStatus(`🎤 쉐도잉 녹음 중 (+${trailingSecs}초 여유)...`, 'status-buffer');
+      await new Promise(r => setTimeout(r, trailingBufferMs));
 
       if (isPaused) return;
 
@@ -390,11 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 3. Play Kids Recorded Voice
       currentState = STATE.PLAY_RECORDED;
-      setStatus('👂 2. 방금 우리가 연기한 목소리', 'status-kids');
+      setStatus('👂 2. 방금 우리가 읽은 목소리', 'status-kids');
       if (lastRecordedAudioUrl) {
         await audio.playAudioUrl(lastRecordedAudioUrl);
       } else {
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 2000));
       }
 
       if (isPaused) return;
@@ -420,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentState = STATE.IDLE;
       setStatus('➡️ 다음 문장 준비 중...', 'status-next');
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1200));
 
       if (isPaused) return;
 
@@ -662,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // AI Process Photos Button (Emotion-Acting Extraction)
+  // AI Process Photos Button
   if (aiProcessBtn) {
     aiProcessBtn.addEventListener('click', async () => {
       if (!selectedImageFiles || selectedImageFiles.length === 0) {
@@ -700,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         curriculum.addContinuousChapter(data.title, data.chapter, data.sentences);
-        alert(`🎉 대성공! 총 ${data.sentences.length}개의 문장에 감정 연기 태그가 적용되어 등록되었습니다. 1번 문장부터 시작합니다!`);
+        alert(`🎉 성공! 총 ${data.sentences.length}개의 문장이 연속 독서 코스로 등록되었습니다. 1번 문장부터 시작합니다!`);
 
         adminModal.classList.remove('active');
         selectedImageFiles = [];

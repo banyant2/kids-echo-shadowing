@@ -7,8 +7,32 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Kids Echo Shadowing — 잠수네 연속 집중듣기 쉐도잉</title>
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=12">
   <meta name="theme-color" content="#2563eb">
+  <style>
+    .speed-presets {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .btn-speed-preset {
+      flex: 1;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-main);
+      color: var(--text-main);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-speed-preset.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+  </style>
 </head>
 <body>
   <div id="securityBanner" class="security-banner"></div>
@@ -136,7 +160,7 @@
       </div>
 
       <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="voice">🔊 음성 연기 & 30분 설정</button>
+        <button class="admin-tab active" data-tab="voice">🔊 음성·속도(느리게) & 시간</button>
         <button class="admin-tab" data-tab="photo">📸 사진 책 업로드(AI)</button>
         <button class="admin-tab" data-tab="text">📝 텍스트 직접 입력</button>
         <button class="admin-tab" data-tab="apikey">🔑 API 키 설정</button>
@@ -165,18 +189,20 @@
 
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label for="ttsRateRange">낭독 속도 조절</label>
-            <span id="ttsRateVal" style="font-weight: 700; color: #2563eb;">0.85x</span>
+            <label for="ttsRateRange">낭독 속도 조절 (0.3x ~ 1.0x 대폭 확장)</label>
+            <span id="ttsRateVal" style="font-weight: 700; color: #2563eb;">0.60x</span>
           </div>
-          <input type="range" id="ttsRateRange" min="0.65" max="1.15" step="0.05" value="0.85" class="form-control" style="cursor: pointer;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8;">
-            <span>0.65x (느리게)</span>
-            <span>0.85x (초등 1·2 추천)</span>
-            <span>1.15x (빠르게)</span>
+          <input type="range" id="ttsRateRange" min="0.30" max="1.00" step="0.05" value="0.60" class="form-control" style="cursor: pointer;">
+          
+          <div class="speed-presets">
+            <button class="btn-speed-preset" data-speed="0.35">0.35x 아주천천히</button>
+            <button class="btn-speed-preset active" data-speed="0.55">0.55x 초1추천</button>
+            <button class="btn-speed-preset" data-speed="0.70">0.70x 초2추천</button>
+            <button class="btn-speed-preset" data-speed="0.85">0.85x 보통</button>
           </div>
         </div>
 
-        <button class="btn-sub" id="previewVoiceBtn" style="justify-content: center; width: 100%;">
+        <button class="btn-sub" id="previewVoiceBtn" style="justify-content: center; width: 100%; margin-top: 0.4rem;">
           🔊 선택한 목소리 및 속도 미리듣기
         </button>
 
@@ -284,7 +310,6 @@
   </div>
 
   <script>
-    // Force unregister all old service workers to completely bypass stale mobile caches
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
         for (let registration of registrations) {
@@ -293,9 +318,9 @@
       });
     }
   </script>
-  <script src="js/gemini-api.js?t=10001"></script>
-  <script src="js/audio-engine.js?t=10001"></script>
-  <script src="js/curriculum.js?t=10001"></script>
-  <script src="js/app.js?t=10001"></script>
+  <script src="js/gemini-api.js?v=12"></script>
+  <script src="js/audio-engine.js?v=12"></script>
+  <script src="js/curriculum.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
 </body>
 </html>

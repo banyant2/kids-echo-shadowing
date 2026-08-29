@@ -42,7 +42,7 @@ class GeminiApi {
   }
 
   /**
-   * 고화질 스마트폰 사진을 0.1초 만에 선명한 150KB 이미지로 자동 리사이징
+   * Compress heavy smartphone photos to crisp ~150KB images via HTML5 Canvas
    */
   compressImage(file, maxDimension = 1200, quality = 0.8) {
     return new Promise((resolve, reject) => {
@@ -68,7 +68,7 @@ class GeminiApi {
         ctx.drawImage(img, 0, 0, width, height);
         
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        // 안전한 순수 Base64 문자열 추출 (배열 오류 원천 차단)
+        // Guaranteed string extraction
         const commaIdx = dataUrl.indexOf(',');
         const base64Str = commaIdx !== -1 ? dataUrl.substring(commaIdx + 1) : dataUrl;
         
@@ -102,7 +102,7 @@ class GeminiApi {
   }
 
   /**
-   * 사진 원클릭 일괄 추출 및 감정 연기 태그 분석
+   * One-click Bulk Photo Story Extraction
    */
   async extractStoryWithEmotions(imageFiles, bookTitle, chapterName, onProgress = null) {
     const apiKey = this.getGeminiApiKey();

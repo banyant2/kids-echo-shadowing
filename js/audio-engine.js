@@ -1,5 +1,5 @@
 /**
- * AudioEngine - Web Audio API, Persistent Mic Stream, AEC, AGC, VAD Effort Analyzer, and High-Quality TTS.
+ * AudioEngine - Web Audio API, Persistent Mic Stream, AEC, AGC, VAD Effort Analyzer, and High-Quality Slower TTS.
  */
 class AudioEngine {
   constructor() {
@@ -15,9 +15,9 @@ class AudioEngine {
     this.totalSamples = 0;
     this.vocalEnergySum = 0;
 
-    // TTS Settings
+    // TTS Settings - Default 0.60x for clear elementary shadowing
     this.selectedVoiceURI = localStorage.getItem('shadowing_voice_uri') || '';
-    this.ttsRate = parseFloat(localStorage.getItem('shadowing_tts_rate') || '0.85');
+    this.ttsRate = parseFloat(localStorage.getItem('shadowing_tts_rate') || '0.60');
     this.ttsPitch = 1.0;
     this.availableVoices = [];
 
@@ -30,17 +30,14 @@ class AudioEngine {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
       if (allVoices && allVoices.length > 0) {
-        // Filter English voices
         this.availableVoices = allVoices.filter(v => v.lang.startsWith('en') || v.lang.includes('US') || v.lang.includes('GB'));
         
-        // Sort: Natural / Google / Microsoft / Samantha first
         this.availableVoices.sort((a, b) => {
           const aPri = (a.name.includes('Natural') || a.name.includes('Google') || a.name.includes('Jenny') || a.name.includes('Guy') || a.name.includes('Samantha') || a.name.includes('Zira')) ? 1 : 0;
           const bPri = (b.name.includes('Natural') || b.name.includes('Google') || b.name.includes('Jenny') || b.name.includes('Guy') || b.name.includes('Samantha') || b.name.includes('Zira')) ? 1 : 0;
           return bPri - aPri;
         });
 
-        // Auto select best natural US English voice if none selected
         if (!this.selectedVoiceURI && this.availableVoices.length > 0) {
           const preferred = this.availableVoices.find(v => 
             v.lang.includes('US') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Jenny') || v.name.includes('Samantha') || v.name.includes('Zira'))
@@ -56,7 +53,6 @@ class AudioEngine {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    // Polling fallback for browsers where onvoiceschanged is sluggish
     let retryCount = 0;
     const pollInterval = setInterval(() => {
       loadVoices();
@@ -93,7 +89,7 @@ class AudioEngine {
   }
 
   setRate(rate) {
-    this.ttsRate = parseFloat(rate);
+    this.ttsRate = Math.max(0.25, Math.min(1.2, parseFloat(rate)));
     localStorage.setItem('shadowing_tts_rate', this.ttsRate.toString());
   }
 
@@ -222,11 +218,11 @@ class AudioEngine {
 
           const ratio = this.totalSamples > 0 ? (this.vocalSamples / this.totalSamples) : 0;
           let effortRating = 5;
-          if (ratio >= 0.30) {
+          if (ratio >= 0.25) {
             effortRating = 5;
-          } else if (ratio >= 0.15) {
+          } else if (ratio >= 0.12) {
             effortRating = 4;
-          } else if (ratio > 0.05) {
+          } else if (ratio > 0.04) {
             effortRating = 3;
           } else {
             effortRating = 2;
@@ -247,17 +243,14 @@ class AudioEngine {
     });
   }
 
-  /**
-   * Cleans text to prevent choppy TTS pauses (e.g. Junie B. Jones -> Junie B Jones, Mrs. -> Mrs)
-   */
   cleanTextForTTS(text) {
     if (!text) return '';
     return text
-      .replace(/\b([A-Z])\.\s*/g, '$1 ')    // Junie B. -> Junie B
-      .replace(/\bMrs\.\s*/gi, 'Mrs ')      // Mrs. -> Mrs
-      .replace(/\bMr\.\s*/gi, 'Mr ')        // Mr. -> Mr
-      .replace(/\bDr\.\s*/gi, 'Dr ')        // Dr. -> Dr
-      .replace(/\b([a-zA-Z]+)-([a-zA-Z]+)\b/g, '$1 $2') // hyphen words
+      .replace(/\b([A-Z])\.\s*/g, '$1 ')
+      .replace(/\bMrs\.\s*/gi, 'Mrs ')
+      .replace(/\bMr\.\s*/gi, 'Mr ')
+      .replace(/\bDr\.\s*/gi, 'Dr ')
+      .replace(/\b([a-zA-Z]+)-([a-zA-Z]+)\b/g, '$1 $2')
       .trim();
   }
 
@@ -273,7 +266,10 @@ class AudioEngine {
       const spokenText = this.cleanTextForTTS(text);
       const utterance = new SpeechSynthesisUtterance(spokenText);
       utterance.lang = 'en-US';
-      utterance.rate = this.ttsRate;
+      
+      // Explicitly clamp rate between 0.25 and 1.2
+      const currentRate = Math.max(0.25, Math.min(1.2, this.ttsRate || 0.60));
+      utterance.rate = currentRate;
       utterance.pitch = this.ttsPitch;
 
       const voice = this.getSelectedVoice();
@@ -289,10 +285,17 @@ class AudioEngine {
         };
       }
 
-      utterance.onend = () => resolve();
+      const startMark = performance.now();
+
+      utterance.onend = () => {
+        const elapsed = performance.now() - startMark;
+        resolve({ durationMs: elapsed });
+      };
+
       utterance.onerror = (e) => {
+        const elapsed = performance.now() - startMark;
         console.warn("TTS Event Notice:", e);
-        resolve();
+        resolve({ durationMs: elapsed });
       };
 
       window.speechSynthesis.speak(utterance);
@@ -300,7 +303,7 @@ class AudioEngine {
   }
 
   previewVoice() {
-    return this.speakTTS("Hello! My name is Junie B Jones. We are reading our book together!");
+    return this.speakTTS("My name is Junie B. Jones. Today is the first day of school.");
   }
 
   stopTTS() {
@@ -312,14 +315,15 @@ class AudioEngine {
   playAudioUrl(url) {
     return new Promise((resolve, reject) => {
       const audio = new Audio(url);
-      audio.onended = () => resolve();
+      const startMark = performance.now();
+      audio.onended = () => resolve({ durationMs: performance.now() - startMark });
       audio.onerror = (e) => {
         console.warn("Audio playback error:", e);
-        resolve();
+        resolve({ durationMs: performance.now() - startMark });
       };
       audio.play().catch((err) => {
         console.warn("Audio play prevented:", err);
-        resolve();
+        resolve({ durationMs: performance.now() - startMark });
       });
     });
   }
