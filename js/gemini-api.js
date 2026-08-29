@@ -46,9 +46,9 @@ class GeminiApi {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
-        // 쉼표 뒤의 순수 Base64 문자열만 정확히 추출
+        // Extract exact base64 data string after the comma
         const base64String = (typeof result === 'string' && result.indexOf(',') !== -1)
-          ? result.split(',')
+          ? result.split(',')[1]
           : result;
         resolve({
           mimeType: file.type || 'image/jpeg',
@@ -77,7 +77,7 @@ class GeminiApi {
   }
 
   /**
-   * 단일 초경량/초저렴 모델 (Gemini 2.0 Flash)로 즉시 추출
+   * Single Dedicated Call to the Fastest & Cheapest Model (Gemini 2.0 Flash)
    */
   async extractStoryWithEmotions(imageFiles, bookTitle, chapterName, onProgress = null) {
     const apiKey = this.getGeminiApiKey();

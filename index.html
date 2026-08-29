@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Kids Echo Shadowing — 잠수네 연속 집중듣기 쉐도잉</title>
-  <link rel="stylesheet" href="css/style.css?v=5">
-  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css?v=10">
   <meta name="theme-color" content="#2563eb">
 </head>
 <body>
@@ -281,9 +283,19 @@
     </div>
   </div>
 
-  <script src="js/gemini-api.js?v=5"></script>
-  <script src="js/audio-engine.js?v=5"></script>
-  <script src="js/curriculum.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script>
+    // Force unregister all old service workers to completely bypass stale mobile caches
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script>
+  <script src="js/gemini-api.js?t=10001"></script>
+  <script src="js/audio-engine.js?t=10001"></script>
+  <script src="js/curriculum.js?t=10001"></script>
+  <script src="js/app.js?t=10001"></script>
 </body>
 </html>
