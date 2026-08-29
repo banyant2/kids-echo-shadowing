@@ -46,7 +46,10 @@ class GeminiApi {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
-        const base64String = result.includes(',') ? result.split(',') : result;
+        // 쉼표 뒤의 순수 Base64 문자열만 정확히 추출
+        const base64String = (typeof result === 'string' && result.indexOf(',') !== -1)
+          ? result.split(',')
+          : result;
         resolve({
           mimeType: file.type || 'image/jpeg',
           data: base64String
@@ -144,7 +147,7 @@ Return ONLY a valid JSON object matching this schema:
       }
     };
 
-    if (onProgress) onProgress("Gemini 2.0 Flash (초경량 고속 모델)로 책 분석 중...");
+    if (onProgress) onProgress("Gemini 2.0 Flash로 책 분석 중...");
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
