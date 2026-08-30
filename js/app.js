@@ -1,5 +1,5 @@
 /**
- * Main Application Coordinator - Slower Paced Shadowing, 2X Recording Window, Continuous Timer & UI Sync.
+ * Main Application Coordinator - Visual Word Sync, Central Green/Red Mic Beacon, Fullscreen & Continuous Reading.
  */
 document.addEventListener('DOMContentLoaded', () => {
   const audio = new AudioEngine();
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const securityBanner = document.getElementById('securityBanner');
   const sentenceDisplay = document.getElementById('sentenceDisplay');
   const emotionBadge = document.getElementById('emotionBadge');
+  const micStatusBeacon = document.getElementById('micStatusBeacon');
+  const micStatusText = document.getElementById('micStatusText');
   const statusPill = document.getElementById('statusPill');
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const chapterTitleEl = document.getElementById('chapterTitle');
   const chapterSubEl = document.getElementById('chapterSub');
   const displayCard = document.getElementById('displayCard');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
 
   // Modals & Admin
   const adminBtn = document.getElementById('adminBtn');
@@ -118,6 +121,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
+
+  // Fullscreen Mode Controller
+  function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+      if (fullscreenBtn) fullscreenBtn.innerHTML = '🗗 <span>창모드</span>';
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      if (fullscreenBtn) fullscreenBtn.innerHTML = '⛶ <span>전체화면</span>';
+    }
+  }
+
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    if (fullscreenBtn) {
+      fullscreenBtn.innerHTML = document.fullscreenElement ? '🗗 <span>창모드</span>' : '⛶ <span>전체화면</span>';
+    }
+  });
+
+  // Central Visual Beacon (녹색불 / 빨간불 인디케이터)
+  function setMicBeacon(state, message) {
+    if (!micStatusBeacon || !micStatusText) return;
+    micStatusBeacon.className = `mic-status-beacon beacon-${state}`;
+    micStatusText.innerText = message;
+  }
 
   // Populate Voice Dropdown
   function populateVoices() {
@@ -292,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!item) {
       sentenceDisplay.innerHTML = '<span class="word">등록된 문장이 없습니다. [설정 & 교재]에서 사진을 등록해주세요.</span>';
       if (emotionBadge) emotionBadge.style.display = 'none';
+      setMicBeacon('idle', '⚪ 준비 대기 중');
       return;
     }
 
@@ -344,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.stopRecording();
     clearHighlight();
     displayCard.classList.remove('active-reading');
+    setMicBeacon('muted', '🔴 마이크 꺼짐 (일시정지 중)');
     setStatus('⏸ 일시정지 / 대기 중', 'status-idle');
     startBtn.style.display = 'inline-flex';
     startBtn.innerHTML = `▶ 이어서 읽기 (${currentSentenceIndex + 1}번부터)`;
@@ -351,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentState = STATE.IDLE;
   }
 
-  // State Machine Loop with 2X Slower Shadowing Trailing Window
+  // State Machine Loop with Visual Green/Red Beacon & 2X Trailing Buffer
   async function runCycle() {
     const sentences = curriculum.getAllSentences();
     if (!sentences || sentences.length === 0) return;
@@ -373,8 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCurrentSentence();
 
     try {
-      // 1. Play Native & Record
+      // 1. Play Native & Simultaneous Record (🟢 녹색불 켜짐!)
       currentState = STATE.PLAY_AND_RECORD;
+      setMicBeacon('recording', '🟢 마이크 켜짐 — 지금 큰 목소리로 따라 읽으세요!');
       setStatus(`🔊 1. 원음 듣기 & 따라 읽기 (#${currentSentenceIndex + 1})`, 'status-native');
       displayCard.classList.add('active-reading');
       audio.playChime();
@@ -393,20 +435,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isPaused) return;
 
-      // 2. Generous 2X Recording Window for Children (원음 재생 시간만큼을 추가로 더 대기)
+      // 2. Generous 2X Recording Window for Children (🟢 녹색불 유지!)
       currentState = STATE.BUFFER;
       clearHighlight();
       
       const measuredPlaybackMs = (playbackResult && playbackResult.durationMs) ? playbackResult.durationMs : (performance.now() - playbackStart);
-      // Trailing buffer is equal to the playback duration (min 3.5 seconds)
       const trailingBufferMs = Math.max(3500, Math.round(measuredPlaybackMs * 1.1));
       const trailingSecs = (trailingBufferMs / 1000).toFixed(1);
 
+      setMicBeacon('recording', `🟢 마이크 켜짐 — 끝까지 여유롭게 읽으세요! (+${trailingSecs}초)`);
       setStatus(`🎤 쉐도잉 녹음 중 (+${trailingSecs}초 여유)...`, 'status-buffer');
       await new Promise(r => setTimeout(r, trailingBufferMs));
 
       if (isPaused) return;
 
+      // Stop recording -> Turn to Blue Light 🔵
       const recordRes = await audio.stopRecording();
       if (recordRes) {
         lastRecordedAudioUrl = recordRes.url;
@@ -415,8 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isPaused) return;
 
-      // 3. Play Kids Recorded Voice
+      // 3. Play Kids Recorded Voice (🔵 파란불)
       currentState = STATE.PLAY_RECORDED;
+      setMicBeacon('playback', '🔵 우리 목소리 확인 중 — 잘 읽었는지 들어보세요');
       setStatus('👂 2. 방금 우리가 읽은 목소리', 'status-kids');
       if (lastRecordedAudioUrl) {
         await audio.playAudioUrl(lastRecordedAudioUrl);
@@ -426,8 +470,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isPaused) return;
 
-      // 4. Replay Native Audio
+      // 4. Replay Native Audio (🔴 빨간불 - 마이크 끄고 원음에 집중)
       currentState = STATE.REPLAY_NATIVE;
+      setMicBeacon('muted', '🔴 마이크 꺼짐 — 원어민 발음에 귀 기울여 보세요');
       setStatus('🔊 3. 원음 다시 확인하기', 'status-replay');
       if (item.audioUrl) {
         await audio.playAudioUrl(item.audioUrl);
@@ -446,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
       curriculum.saveBookmarkIndex(currentSentenceIndex);
 
       currentState = STATE.IDLE;
+      setMicBeacon('idle', '⚪ 다음 문장 준비 중...');
       setStatus('➡️ 다음 문장 준비 중...', 'status-next');
       await new Promise(r => setTimeout(r, 1200));
 
@@ -455,6 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error("Cycle error:", err);
+      setMicBeacon('muted', '⚠️ 오류 발생');
       setStatus('⚠️ ' + err.message, 'status-buffer');
       stopAllActivity();
     }
@@ -466,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stopTimer();
     displayCard.classList.remove('active-reading');
     clearHighlight();
+    setMicBeacon('muted', '🔴 마이크 꺼짐 (오늘 미션 완주!)');
 
     if (isBookFinished) {
       setStatus('🏆 챕터 전체 완독을 축하합니다!', 'status-next');
@@ -792,5 +840,6 @@ document.addEventListener('DOMContentLoaded', () => {
   resetTimer();
   renderHeaderAndProgress();
   renderCurrentSentence();
+  setMicBeacon('idle', '⚪ 준비 대기 중 ([START]를 누르세요)');
   setStatus('준비 완료 ([START]를 누르세요)', 'status-idle');
 });

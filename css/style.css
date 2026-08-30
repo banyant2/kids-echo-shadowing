@@ -13,7 +13,7 @@
   --purple: #7c3aed;
   --purple-light: #f5f3ff;
   --border: #cbd5e1;
-  --highlight: #fef08a;
+  --highlight: #fde047;
   --highlight-border: #eab308;
   --radius-lg: 20px;
   --radius-md: 12px;
@@ -40,6 +40,7 @@ body {
   overflow-x: hidden;
 }
 
+/* Security Notice Banner */
 .security-banner {
   background: #fef2f2;
   color: #991b1b;
@@ -90,7 +91,7 @@ header {
 .header-meta {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .badge-points {
@@ -120,6 +121,10 @@ header {
   gap: 0.35rem;
   white-space: nowrap;
   transition: all 0.15s;
+}
+
+.btn-icon:hover {
+  background: #e2e8f0;
 }
 
 .btn-icon:active {
@@ -221,28 +226,28 @@ main {
 
 .status-idle { background: #e2e8f0; color: #334155; }
 .status-native { background: #ffedd5; color: #c2410c; border: 1.5px solid #fed7aa; }
-.status-buffer { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fecaca; }
+.status-buffer { background: #dcfce7; color: #15803d; border: 1.5px solid #bbf7d0; }
 .status-kids { background: #dbeafe; color: #1d4ed8; border: 1.5px solid #bfdbfe; }
 .status-replay { background: #f3e8ff; color: #6b21a8; border: 1.5px solid #e9d5ff; }
-.status-next { background: #dcfce7; color: #15803d; border: 1.5px solid #bbf7d0; }
+.status-next { background: #e0f2fe; color: #0369a1; border: 1.5px solid #bae6fd; }
 
-/* Display Card */
+/* Central Display Card */
 .display-card {
   flex: 1;
-  min-height: 280px;
+  min-height: 320px;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   border: 2px solid var(--border);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 2.25rem 2rem;
+  padding: 2rem 2.5rem;
   text-align: center;
   position: relative;
   transition: all 0.25s ease;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .display-card.active-reading {
@@ -263,35 +268,107 @@ main {
   align-items: center;
   gap: 0.4rem;
   box-shadow: 0 2px 4px rgba(190, 24, 93, 0.08);
-  animation: popIn 0.3s ease;
 }
 
-@keyframes popIn {
-  from { transform: scale(0.92); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+/* Central Microphone LED Beacon (녹색불 / 빨간불 표시기) */
+.mic-status-beacon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: all 0.25s ease;
+  box-shadow: var(--shadow);
 }
 
+.led-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+/* 🟢 녹음 가능 / 발화 상태 (GREEN LIGHT) */
+.beacon-recording {
+  background: #dcfce7;
+  color: #166534;
+  border: 2px solid #4ade80;
+  animation: pulseGreenGlow 1.2s infinite alternate ease-in-out;
+}
+.beacon-recording .led-indicator {
+  background: #22c55e;
+  box-shadow: 0 0 12px #22c55e, 0 0 24px #4ade80;
+}
+
+@keyframes pulseGreenGlow {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); transform: scale(1); }
+  100% { box-shadow: 0 0 20px 6px rgba(34, 197, 94, 0.25); transform: scale(1.03); }
+}
+
+/* 🔴 마이크 꺼짐 / 듣는 상태 (RED LIGHT) */
+.beacon-muted {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 2px solid #f87171;
+}
+.beacon-muted .led-indicator {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* 🔵 우리 목소리 재생 상태 (BLUE LIGHT) */
+.beacon-playback {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 2px solid #60a5fa;
+}
+.beacon-playback .led-indicator {
+  background: #3b82f6;
+  box-shadow: 0 0 10px #3b82f6;
+}
+
+/* ⚪ 대기 상태 */
+.beacon-idle {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 2px solid #cbd5e1;
+}
+.beacon-idle .led-indicator {
+  background: #94a3b8;
+}
+
+/* Sentence & Word Highlighting */
 .sentence-container {
-  font-size: clamp(1.8rem, 4.4vw, 3.4rem);
+  font-size: clamp(2rem, 4.8vw, 3.8rem);
   font-weight: 700;
   line-height: 1.5;
   color: #1e293b;
   letter-spacing: 0.01em;
   word-break: keep-all;
+  margin: auto 0;
 }
 
 .word {
   display: inline-block;
-  padding: 0.1rem 0.35rem;
-  margin: 0.1rem 0.15rem;
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
+  padding: 0.15rem 0.45rem;
+  margin: 0.15rem 0.2rem;
+  border-radius: 10px;
+  transition: all 0.15s ease;
 }
 
+/* Word-by-word Live Highlight */
 .word.highlight {
   background-color: var(--highlight);
-  border-bottom: 3px solid var(--highlight-border);
+  border-bottom: 4px solid var(--highlight-border);
   color: #0f172a;
+  font-weight: 800;
+  transform: scale(1.12);
+  box-shadow: 0 6px 16px rgba(234, 179, 8, 0.45);
 }
 
 /* Controls Bar */
@@ -475,6 +552,32 @@ textarea.form-control {
   resize: vertical;
 }
 
+/* Speed Presets */
+.speed-presets {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.btn-speed-preset {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-main);
+  color: var(--text-main);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-speed-preset.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 /* File Upload Drop Area */
 .file-drop-area {
   border: 2px dashed #cbd5e1;
@@ -586,6 +689,45 @@ textarea.form-control {
   z-index: 101;
 }
 
+/* Fullscreen Mode Adaptations (TV & Theatre) */
+:fullscreen body, :-webkit-full-screen body {
+  background: #090d16;
+  color: #f8fafc;
+}
+:fullscreen header, :-webkit-full-screen header {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+:fullscreen .brand-title, :-webkit-full-screen .brand-title {
+  color: #f8fafc;
+}
+:fullscreen .curriculum-bar, :-webkit-full-screen .curriculum-bar {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+:fullscreen .chapter-info h2, :-webkit-full-screen .chapter-info h2 {
+  color: #f8fafc;
+}
+:fullscreen .display-card, :-webkit-full-screen .display-card {
+  background: #0f172a;
+  border-color: #334155;
+  min-height: 480px;
+  padding: 3rem 4rem;
+}
+:fullscreen .sentence-container, :-webkit-full-screen .sentence-container {
+  color: #f8fafc;
+  font-size: clamp(2.4rem, 5.5vw, 4.5rem);
+}
+:fullscreen .word.highlight, :-webkit-full-screen .word.highlight {
+  background: #facc15;
+  color: #000000;
+}
+:fullscreen .btn-sub, :-webkit-full-screen .btn-sub {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
 /* TV & Tablet Screens (1024px+) */
 @media (min-width: 1024px) {
   header { padding: 1.2rem 2.5rem; }
@@ -593,9 +735,10 @@ textarea.form-control {
   .curriculum-bar { padding: 1.25rem 2rem; }
   .chapter-info h2 { font-size: 1.45rem; }
   .chapter-info p { font-size: 1rem; }
-  .display-card { min-height: 400px; padding: 3.5rem 2.5rem; }
-  .sentence-container { font-size: 3.2rem; line-height: 1.5; }
+  .display-card { min-height: 420px; padding: 3.5rem 3rem; }
+  .sentence-container { font-size: 3.4rem; line-height: 1.5; }
   .emotion-badge { font-size: 1.25rem; padding: 0.6rem 1.6rem; }
+  .mic-status-beacon { font-size: 1.2rem; padding: 0.75rem 2rem; }
   .status-pill { font-size: 1.25rem; padding: 0.65rem 1.75rem; }
   .btn-main { font-size: 1.5rem; padding: 1.2rem 3rem; }
   .btn-sub { font-size: 1.15rem; padding: 1rem 1.75rem; }

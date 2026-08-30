@@ -7,32 +7,8 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Kids Echo Shadowing — 잠수네 연속 집중듣기 쉐도잉</title>
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=20">
   <meta name="theme-color" content="#2563eb">
-  <style>
-    .speed-presets {
-      display: flex;
-      gap: 0.4rem;
-      margin-top: 0.4rem;
-    }
-    .btn-speed-preset {
-      flex: 1;
-      padding: 0.35rem 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-main);
-      color: var(--text-main);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .btn-speed-preset.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-  </style>
 </head>
 <body>
   <div id="securityBanner" class="security-banner"></div>
@@ -50,6 +26,9 @@
       <div class="badge badge-points" id="pointsBadge">
         ⭐ <span id="totalPoints" style="margin-left: 4px;">0점</span>
       </div>
+      <button class="btn-icon" id="fullscreenBtn" title="전체화면 모드 (TV/태블릿 몰입)">
+        ⛶ <span>전체화면</span>
+      </button>
       <button class="btn-icon" id="adminBtn" title="설정 및 교재 관리">
         ⚙️ <span>설정 & 교재</span>
       </button>
@@ -83,11 +62,21 @@
       대기 중 ([START]를 누르세요)
     </div>
 
-    <!-- Main Sentence Card with Emotion Badge -->
+    <!-- Main Sentence Card with Central LED Light Beacon & Emotion Badge -->
     <div class="display-card" id="displayCard">
-      <div class="emotion-badge" id="emotionBadge">
-        👧 <strong>Junie B.</strong> &nbsp;|&nbsp; 👧 씩씩하고 밝게 자기소개!
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%;">
+        <div class="emotion-badge" id="emotionBadge">
+          👧 <strong>Junie B.</strong> &nbsp;|&nbsp; 👧 씩씩하고 밝게 자기소개!
+        </div>
+
+        <!-- 🟢/🔴 중앙 마이크 시각적 표시기 -->
+        <div class="mic-status-beacon beacon-idle" id="micStatusBeacon">
+          <span class="led-indicator"></span>
+          <span id="micStatusText">⚪ 준비 대기 중 ([START]를 누르세요)</span>
+        </div>
       </div>
+
+      <!-- Large Typography with Live Word-by-Word Highlight -->
       <div class="sentence-container" id="sentenceDisplay">
         <!-- Dynamically rendered words -->
       </div>
@@ -318,9 +307,9 @@
       });
     }
   </script>
-  <script src="js/gemini-api.js?v=12"></script>
-  <script src="js/audio-engine.js?v=12"></script>
-  <script src="js/curriculum.js?v=12"></script>
-  <script src="js/app.js?v=12"></script>
+  <script src="js/gemini-api.js?v=20"></script>
+  <script src="js/audio-engine.js?v=20"></script>
+  <script src="js/curriculum.js?v=20"></script>
+  <script src="js/app.js?v=20"></script>
 </body>
 </html>
